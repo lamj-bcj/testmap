@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2026 Election Dates by State</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182230;
+    --paper:#F7F7F4;
+    --rule:#D8D9D4;
+    --state-fill:#E4E4DE;
+    --state-stroke:#FFFFFF;
+    --accent-gold:#B08A2E;
+    --accent-navy:#2A3F5F;
+    --muted:#5B6472;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.5;
+  }
+  .wrap{
+    max-width:1040px;
+    margin:0 auto;
+    padding:48px 24px 64px;
+  }
+  header{
+    border-bottom:1px solid var(--rule);
+    padding-bottom:24px;
+    margin-bottom:28px;
+  }
+  .kicker{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:12px;
+    letter-spacing:.04em;
+    color:var(--accent-gold);
+    margin:0 0 10px;
+  }
+  h1{
+    font-family:"Source Serif 4",Georgia,serif;
+    font-weight:600;
+    font-size:clamp(28px,4vw,40px);
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    max-width:60ch;
+    color:var(--muted);
+    font-size:15px;
+    margin:0;
+  }
+  .legend{
+    display:flex;
+    gap:22px;
+    flex-wrap:wrap;
+    margin-top:20px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .legend span{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .swatch{
+    width:13px;height:13px;
+    display:inline-block;
+    border:1px solid var(--rule);
+  }
+  .sw-base{background:var(--state-fill);}
+  .sw-hover{background:var(--accent-navy);}
+  .sw-none{background:var(--paper); background-image:repeating-linear-gradient(45deg, var(--rule) 0 2px, transparent 2px 5px);}
+
+  .map-area{
+    position:relative;
+    margin-top:12px;
+  }
+  svg{
+    width:100%;
+    height:auto;
+    display:block;
+  }
+  path.state{
+    fill:var(--state-fill);
+    stroke:var(--state-stroke);
+    stroke-width:1;
+    cursor:pointer;
+    transition:fill 120ms ease;
+  }
+  path.state.no-data{
+    fill:var(--paper);
+  }
+  path.state:hover,
+  path.state.active{
+    fill:var(--accent-navy);
+  }
+
+  #tooltip{
+    position:fixed;
+    pointer-events:none;
+    background:var(--ink);
+    color:#fff;
+    padding:10px 13px;
+    font-size:13px;
+    max-width:240px;
+    line-height:1.45;
+    opacity:0;
+    transform:translateY(4px);
+    transition:opacity 100ms ease, transform 100ms ease;
+    z-index:20;
+  }
+  #tooltip.show{ opacity:1; transform:translateY(0); }
+  #tooltip .t-state{
+    font-family:"Source Serif 4",Georgia,serif;
+    font-weight:600;
+    font-size:14.5px;
+    display:block;
+    margin-bottom:4px;
+  }
+  #tooltip .t-row{
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    color:#D8DEE6;
+  }
+  #tooltip .t-row + .t-row{ margin-top:2px; }
+  #tooltip .t-note{
+    margin-top:6px;
+    font-size:11px;
+    color:#B7C0CC;
+    font-style:italic;
+  }
+
+  footer{
+    margin-top:36px;
+    padding-top:18px;
+    border-top:1px solid var(--rule);
+    font-size:12px;
+    color:var(--muted);
+  }
+  footer a{ color:var(--accent-navy); }
+
+  @media (max-width:560px){
+    .legend{ gap:14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">2026 MIDTERM ELECTIONS</p>
+    <h1>Primary &amp; general election dates, by state</h1>
+    <p class="sub">Hover over a state to see its 2026 primary, runoff (where applicable), and general election dates. All states hold their general election on November&nbsp;3, 2026.</p>
+    <div class="legend">
+      <span><i class="swatch sw-base"></i>Has scheduled date</span>
+      <span><i class="swatch sw-hover"></i>Hovered state</span>
+      <span><i class="swatch sw-none"></i>No data available</span>
+    </div>
+  </header>
+
+  <div class="map-area">
+    <svg id="map" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet"></svg>
+    <div id="tooltip"></div>
+  </div>
+
+  <footer>
+    Sources: National Conference of State Legislatures, Federal Voting Assistance Program, Ballotpedia. Compiled Oct 1, 2026 — confirm against official state election authorities before external distribution. Data lives in <code>data.json</code>; edit <code>election-dates.csv</code> and regenerate if your team prefers working in Excel.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson-client/3.1.0/topojson-client.min.js"></script>
+<script>
+(async function () {
+  const tooltip = document.getElementById('tooltip');
+  const svg = d3.select('#map');
+  const path = d3.geoPath();
+
+  function fmtDate(iso) {
+    if (!iso) return null;
+    const [y, m, d] = iso.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  }
+
+  let electionData;
+  try {
+    const dataRes = await fetch('data.json');
+    electionData = await dataRes.json();
+  } catch (e) {
+    console.error('Could not load data.json', e);
+    electionData = { states: {} };
+  }
+
+  let us;
+  try {
+    const topoRes = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json');
+    us = await topoRes.json();
+  } catch (e) {
+    console.error('Could not load map topology', e);
+    return;
+  }
+
+  const states = topojson.feature(us, us.objects.states).features;
+
+  svg.selectAll('path.state')
+    .data(states)
+    .enter()
+    .append('path')
+    .attr('class', d => {
+      const rec = electionData.states[d.properties.name];
+      return 'state' + (rec ? '' : ' no-data');
+    })
+    .attr('d', path)
+    .on('mousemove', function (event, d) {
+      const rec = electionData.states[d.properties.name];
+      d3.select(this).classed('active', true);
+
+      let html = `<span class="t-state">${d.properties.name}</span>`;
+      if (rec) {
+        html += `<div class="t-row"><span>Primary</span><span>${fmtDate(rec.primary)}</span></div>`;
+        if (rec.runoff) {
+          html += `<div class="t-row"><span>Runoff</span><span>${fmtDate(rec.runoff)}</span></div>`;
+        }
+        html += `<div class="t-row"><span>General</span><span>${fmtDate(electionData._meta.generalElection)}</span></div>`;
+        if (rec.note) {
+          html += `<div class="t-note">${rec.note}</div>`;
+        }
+      } else {
+        html += `<div class="t-note">No date on file for this state/territory.</div>`;
+      }
+      tooltip.innerHTML = html;
+      tooltip.classList.add('show');
+
+      const offset = 16;
+      let left = event.clientX + offset;
+      let top = event.clientY + offset;
+      const tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
+      if (left + tw > window.innerWidth - 8) left = event.clientX - tw - offset;
+      if (top + th > window.innerHeight - 8) top = event.clientY - th - offset;
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = top + 'px';
+    })
+    .on('mouseleave', function () {
+      d3.select(this).classed('active', false);
+      tooltip.classList.remove('show');
+    });
+})();
+</script>
+</body>
+</html>
